@@ -22,7 +22,7 @@
       background: #ffffff;
     }
 
-    /* 상위 분류를 위한 컨테이너 */
+    /* 상위 분류 컨테이너 */
     #topCategoryContainer {
       margin-top: 10px;
     }
@@ -42,10 +42,19 @@
       background: #e0e0e0;
     }
 
+    /* 상위 분류 스타일 : 더 진한 색상 */
+    .faq-item.top-category {
+      background: #546e7a;
+      color: #fff;
+      border-bottom: 2px solid #ddd;
+    }
+
+    /* 시나리오 스타일 : 기존 스타일 유지 */
     .faq-item.scenario {
       background: #e9f0ff;
       border-bottom: 2px solid #ddd;
       font-weight: bold;
+      color: #000;
     }
 
     .faq-item.category {
@@ -467,7 +476,8 @@
       const topCategories = [...new Set(faqData.map(item => item.topCategory))];
       topCategories.forEach(topCat => {
         const topCategoryDiv = document.createElement("div");
-        topCategoryDiv.classList.add("faq-item", "scenario");
+        // 상위 분류는 top-category 클래스로 스타일 적용
+        topCategoryDiv.classList.add("faq-item", "top-category");
         topCategoryDiv.textContent = topCat;
         topCategoryDiv.onclick = () => toggleTopCategory(topCat);
         topContainer.appendChild(topCategoryDiv);
