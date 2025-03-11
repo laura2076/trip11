@@ -1,3 +1,5 @@
+리뷰프로모션 → 도입/상담진행/마무리 → 효과/비용/운영방식 → 질문 목록의 계층 구조를 만들어줘
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -93,9 +95,53 @@
             margin-bottom: 10px;
         }
 
+        .search-container input {
+            width: calc(100% - 40px);
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: block;
+            margin: 0 auto;
+        }
+
         .faq-header {
             display: flex;
             align-items: center;
+        }
+
+        .info-button {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            line-height: 24px;
+            cursor: pointer;
+            border: none;
+            margin-left: 5px;
+        }
+
+        .tooltip {
+            display: none;
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            white-space: nowrap;
+            z-index: 1000;
+        }
+
+        .tooltip.show {
+            display: block;
         }
     </style>
 </head>
@@ -103,6 +149,7 @@
     <div class="faq-section">
         <div class="faq-header">
             <h1>FAQ 검색</h1>
+            <button class="info-button" onclick="toggleTooltip()">!</button>
         </div>
         
         <div class="search-container">
@@ -117,7 +164,9 @@
         <p>질문을 클릭하면 여기에 표시됩니다.</p>
     </div>
 
-        <script>
+    <div class="tooltip" id="tooltip">FAQ 용어 정리 (검색이 용이하기 위해 일관된 단어로 검색해주세요.)<br>요금 : 금액, 가격, 객단가, 객실가, 단가<br>리뷰 : 후기, 이용후기, 평가, 별점<br>취소 : 중단, 중지, 제외, 철회, 보류, 종료, 해지<br>보상 : 리워드, 상품, 선물, 상금, 혜택</div>
+
+    <script>
         const faqData = [
             {
                 scenario: "도입",
@@ -359,24 +408,25 @@
                 question: "상담 완료 후 마무리 인사",
                 response: "(신청한 경우)<br>대표님, 리뷰 보상 1건당 00원, 월 예산 한도 00원으로 신청 접수 되었습니다.<br>프로모션 효과를 최대한 보실 수 있도록 지속적으로 모니터링하겠습니다. 신청해 주셔서 감사합니다.<br><br>(미신청한 경우)<br>대표님, 우선 이번에는 진행하지않는 걸로 하겠습니다.<br>다만, 안내드린 것처럼 리뷰 프로모션은 예약률을 높이는 가장 기초적인 솔루션 중 하나 입니다.<br>한 번 더 고민해 보시고, 필요하시면 언제든 말씀 주세요. 감사합니다."
             },
-        ];
 
         function renderScenarios() {
             const container = document.getElementById("scenarioContainer");
             container.innerHTML = '';
+            const scenarios = [...new Set(faqData.map(item => item.scenario))];
 
-            // "리뷰"를 최상위 카테고리로 추가
-            const reviewDiv = document.createElement("div");
-            reviewDiv.classList.add("faq-item", "scenario");
-            reviewDiv.textContent = "리뷰";
-            reviewDiv.onclick = () => toggleCategories("리뷰");
+            scenarios.forEach(scenario => {
+                const scenarioDiv = document.createElement("div");
+                scenarioDiv.classList.add("faq-item", "scenario");
+                scenarioDiv.textContent = scenario;
+                scenarioDiv.onclick = () => toggleCategories(scenario);
 
-            const categoryContainer = document.createElement("div");
-            categoryContainer.classList.add("category-container");
-            categoryContainer.id = `category-리뷰`;
+                const categoryContainer = document.createElement("div");
+                categoryContainer.classList.add("category-container");
+                categoryContainer.id = `category-${scenario}`;
 
-            container.appendChild(reviewDiv);
-            container.appendChild(categoryContainer);
+                container.appendChild(scenarioDiv);
+                container.appendChild(categoryContainer);
+            });
         }
 
         function toggleCategories(scenario) {
@@ -387,25 +437,43 @@
                 container.innerHTML = '';
             } else {
                 container.style.display = "block";
-
-                // "리뷰" 하위 카테고리로 "도입", "상담진행", "마무리" 추가
-                const categories = ["도입", "상담진행", "마무리"];
-                container.innerHTML = categories.map(category =>
-                    `<div class="faq-item category" onclick="renderQuestions('${category}')">${category}</div>`
-                ).join('');
+                const categories = [...new Set(faqData.filter(item => item.scenario === scenario).map(item => item.category))];
+                container.innerHTML = categories.map(category => `<div class="faq-item category" onclick="renderQuestions('${scenario}', '${category}')">${category}</div>`).join('');
             }
         }
 
-        function renderQuestions(category) {
+        function renderQuestions(scenario, category) {
             const container = document.getElementById("questionSection");
-            const questions = faqData.filter(item => item.scenario === category);
-            container.innerHTML = questions.map(item =>
-                `<div class="faq-item" onclick="displayQuestion('${item.question}', '${item.response}')">${item.question}</div>`
-            ).join('');
+            const questions = faqData.filter(item => item.scenario === scenario && item.category === category);
+            container.innerHTML = questions.map(item => `<div class="faq-item" onclick="displayQuestion('${item.question}', '${item.response}')">${item.question}</div>`).join('');
         }
 
         function displayQuestion(questionText, responseText) {
             document.getElementById("questionDisplay").innerHTML = `<p class="selected-question">${questionText}</p><p class="selected-response">${responseText}</p>`;
+        }
+
+        function toggleTooltip() {
+            const tooltip = document.getElementById("tooltip");
+            tooltip.classList.toggle("show");
+            setTimeout(() => {
+                tooltip.classList.remove("show");
+            }, 3000);
+        }
+
+        // 검색어 입력 시 question 항목을 필터링하는 함수 추가
+        function filterFAQ() {
+            const query = document.getElementById("search").value.trim().toLowerCase();
+            const container = document.getElementById("questionSection");
+            if (query === "") {
+                container.innerHTML = "";
+                return;
+            }
+            const results = faqData.filter(item => item.question.toLowerCase().includes(query));
+            if (results.length === 0) {
+                container.innerHTML = `<div class="faq-item">검색 결과가 없습니다.</div>`;
+            } else {
+                container.innerHTML = results.map(item => `<div class="faq-item" onclick="displayQuestion('${item.question}', '${item.response}')">${item.question}</div>`).join('');
+            }
         }
 
         renderScenarios();
