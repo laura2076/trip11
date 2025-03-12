@@ -48,18 +48,16 @@
       max-height: 500px;
     }
     
-    /* 자식 컨테이너에 수직 연결선 추가 */
-    .tree-children::before {
-      content: "";
+    /* vertical-line 요소 (수직 연결선) */
+    .vertical-line {
       position: absolute;
       top: 0;
-      bottom: 0;
       left: 0;
       width: 2px;
       background: #ccc;
     }
     
-    /* 각 자식 박스에 수평 연결선: 수직선과 박스 사이를 잇는 선 */
+    /* 각 자식 박스에 수평 연결선: 수직선과 박스 사이 선 */
     .tree-children > .faq-item::before {
       content: "";
       position: absolute;
@@ -111,10 +109,17 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: flex-start;
       align-items: flex-start;
       height: 100vh;
     }
+    /* breadcrumb 스타일 (question 제외) */
+    .breadcrumb {
+      font-size: 16px;
+      color: #555;
+      margin-bottom: 10px;
+    }
+    /* 강조된 질문 스타일 */
     .selected-question {
       font-size: 22px;
       font-weight: bold;
@@ -499,7 +504,49 @@
       }
     ];
     
-    // topCategory(루트 노드)들을 트리 구조로 렌더링
+    // 컨테이너 내 vertical-line 높이를 자식들의 최하단까지 동적으로 조정합니다.
+    // 만약 컨테이너 내에 .scenario 요소가 있다면 마지막 scenario 요소의 중앙까지만 계산합니다.
+    function adjustVerticalLine(container) {
+      const verticalLine = container.querySelector('.vertical-line');
+      if (!verticalLine) return;
+      
+      // 만약 해당 컨테이너 내에 .scenario 요소가 있다면,
+      // 마지막 .scenario 요소를 기준으로 높이를 계산합니다.
+      const scenarioChildren = Array.from(container.children).filter(child => child.classList.contains('scenario'));
+      if (scenarioChildren.length > 0) {
+        const lastScenario = scenarioChildren[scenarioChildren.length - 1];
+        const targetHeight = lastScenario.offsetTop + (lastScenario.offsetHeight / 2);
+        verticalLine.style.height = targetHeight + "px";
+      } else {
+        // vertical-line 요소를 제외한 자식들을 선택
+        const children = Array.from(container.children).filter(child => !child.classList.contains('vertical-line'));
+        let lastChild = null;
+        // 뒤에서부터 offsetHeight가 있는 요소를 찾습니다.
+        for (let i = children.length - 1; i >= 0; i--) {
+          if (children[i].offsetHeight > 0) {
+            lastChild = children[i];
+            break;
+          }
+        }
+        if (!lastChild && children.length > 0) {
+          lastChild = children[children.length - 1];
+        }
+        if (lastChild) {
+          // 기본적으로 마지막 요소의 중앙까지만 계산
+          verticalLine.style.height = (lastChild.offsetTop + (lastChild.offsetHeight / 2)) + "px";
+        } else {
+          verticalLine.style.height = "0px";
+        }
+      }
+      
+      // 상위 tree-children 컨테이너가 있으면 재귀적으로 업데이트
+      const parentTreeContainer = container.parentElement.closest('.tree-children');
+      if (parentTreeContainer) {
+        adjustVerticalLine(parentTreeContainer);
+      }
+    }
+    
+    // topCategory(루트 노드)들을 트리 구조로 렌더링 (단, topCategory는 단일 열기 적용)
     function renderTopCategories() {
       const topContainer = document.getElementById("topCategoryContainer");
       topContainer.innerHTML = '';
@@ -512,6 +559,19 @@
         topCategoryDiv.classList.add("faq-item", "top-category");
         topCategoryDiv.textContent = topCat;
         topCategoryDiv.onclick = function() {
+          // topCategory에서는 하나만 열리도록 처리
+          const allContainers = document.querySelectorAll('[id^="tree-children-"]');
+          allContainers.forEach(cont => {
+            if (cont.id !== `tree-children-${topCat}` && cont.classList.contains("open")) {
+              cont.classList.remove("open");
+              setTimeout(() => { 
+                cont.innerHTML = ''; 
+                const vl = document.createElement("div");
+                vl.classList.add("vertical-line");
+                cont.appendChild(vl);
+              }, 500);
+            }
+          });
           this.classList.toggle('expanded');
           toggleTopCategory(topCat);
         };
@@ -520,9 +580,12 @@
         const childrenContainer = document.createElement("div");
         childrenContainer.classList.add("tree-children");
         childrenContainer.id = `tree-children-${topCat}`;
-        // 초기 상태는 closed (max-height: 0)
-        treeNode.appendChild(childrenContainer);
+        // vertical-line 요소 추가
+        const verticalLine = document.createElement("div");
+        verticalLine.classList.add("vertical-line");
+        childrenContainer.appendChild(verticalLine);
         
+        treeNode.appendChild(childrenContainer);
         topContainer.appendChild(treeNode);
       });
     }
@@ -531,21 +594,32 @@
       const container = document.getElementById(`tree-children-${topCat}`);
       if (container.classList.contains("open")) {
         container.classList.remove("open");
-        // 닫히는 모션이 끝난 후 자식 내용 삭제 (모션과 내용 삭제 분리)
-        setTimeout(() => { container.innerHTML = ''; }, 500);
+        setTimeout(() => { 
+          container.innerHTML = ''; 
+          const vl = document.createElement("div");
+          vl.classList.add("vertical-line");
+          container.appendChild(vl);
+        }, 500);
       } else {
         renderScenarios(topCat, container);
         container.classList.add("open");
+        setTimeout(() => { adjustVerticalLine(container); }, 100);
       }
     }
     
     function renderScenarios(topCat, parentContainer) {
       parentContainer.innerHTML = '';
+      // vertical-line 요소 추가
+      const verticalLine = document.createElement("div");
+      verticalLine.classList.add("vertical-line");
+      parentContainer.appendChild(verticalLine);
+      
       const scenarios = [...new Set(faqData.filter(item => item.topCategory === topCat).map(item => item.scenario))];
       scenarios.forEach(scenario => {
         const scenarioDiv = document.createElement("div");
         scenarioDiv.classList.add("faq-item", "scenario");
         scenarioDiv.textContent = scenario;
+        // 시나리오 레벨은 중복 열리게 처리 (단일 열기 로직 제거)
         scenarioDiv.onclick = function() {
           this.classList.toggle('expanded');
           toggleCategories(topCat, scenario);
@@ -555,23 +629,40 @@
         const categoryContainer = document.createElement("div");
         categoryContainer.classList.add("tree-children");
         categoryContainer.id = `tree-category-${topCat}-${scenario}`;
+        // category 컨테이너의 vertical-line 추가
+        const catVerticalLine = document.createElement("div");
+        catVerticalLine.classList.add("vertical-line");
+        categoryContainer.appendChild(catVerticalLine);
+        
         parentContainer.appendChild(categoryContainer);
       });
+      setTimeout(() => { adjustVerticalLine(parentContainer); }, 100);
     }
     
     function toggleCategories(topCat, scenario) {
       const container = document.getElementById(`tree-category-${topCat}-${scenario}`);
       if (container.classList.contains("open")) {
         container.classList.remove("open");
-        setTimeout(() => { container.innerHTML = ''; }, 500);
+        setTimeout(() => { 
+          container.innerHTML = ''; 
+          const vl = document.createElement("div");
+          vl.classList.add("vertical-line");
+          container.appendChild(vl);
+        }, 500);
       } else {
         renderCategories(topCat, scenario, container);
         container.classList.add("open");
+        setTimeout(() => { adjustVerticalLine(container); }, 100);
       }
     }
     
     function renderCategories(topCat, scenario, parentContainer) {
       parentContainer.innerHTML = '';
+      // vertical-line 요소 추가
+      const verticalLine = document.createElement("div");
+      verticalLine.classList.add("vertical-line");
+      parentContainer.appendChild(verticalLine);
+      
       const categories = [...new Set(faqData.filter(item => item.topCategory === topCat && item.scenario === scenario).map(item => item.category))];
       categories.forEach(category => {
         const catDiv = document.createElement("div");
@@ -580,17 +671,25 @@
         catDiv.onclick = () => renderQuestions(topCat, scenario, category);
         parentContainer.appendChild(catDiv);
       });
+      setTimeout(() => { adjustVerticalLine(parentContainer); }, 100);
     }
     
     function renderQuestions(topCat, scenario, category) {
       const container = document.getElementById("questionSection");
       const questions = faqData.filter(item => item.topCategory === topCat && item.scenario === scenario && item.category === category);
-      container.innerHTML = questions.map(item => `<div class="faq-item" onclick="displayQuestion('${item.question}', '${item.response}')">${item.question}</div>`).join('');
+      container.innerHTML = questions.map(item => 
+        `<div class="faq-item" onclick="displayQuestion('${item.topCategory}', '${item.scenario}', '${item.category}', '${item.question}', '${item.response}')">
+           ${item.question}
+         </div>`
+      ).join('');
     }
     
-    function displayQuestion(questionText, responseText) {
+    // displayQuestion 함수: breadcrumb에 topCategory > scenario > category를 표시하고, 질문과 답변을 별도 영역에 강조
+    function displayQuestion(topCategory, scenario, category, questionText, responseText) {
+      const breadcrumb = topCategory + " > " + scenario + " > " + category;
       document.getElementById("questionDisplay").innerHTML =
-        `<p class="selected-question">${questionText}</p>
+        `<p class="breadcrumb">${breadcrumb}</p>
+         <p class="selected-question"><strong>${questionText}</strong></p>
          <p class="selected-response">${responseText}</p>`;
     }
     
@@ -614,7 +713,9 @@
         container.innerHTML = `<div class="faq-item">검색 결과가 없습니다.</div>`;
       } else {
         container.innerHTML = results.map(item =>
-          `<div class="faq-item" onclick="displayQuestion('${item.question}', '${item.response}')">${item.question}</div>`
+          `<div class="faq-item" onclick="displayQuestion('${item.topCategory}', '${item.scenario}', '${item.category}', '${item.question}', '${item.response}')">
+             ${item.question}
+           </div>`
         ).join('');
       }
     }
