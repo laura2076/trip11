@@ -66,6 +66,23 @@
       margin-bottom: 5px;
     }
     
+    /* 사이드바 레이블: 왼쪽 정렬, 볼드 처리 */
+    .sidebar-label {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 10px;
+      text-align: left;
+      font-weight: bold;
+    }
+    
+    /* 가운데 Question 영역 상단 레이블 */
+    .question-label {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    
     /* 트리 구조 관련 스타일 */
     .tree-node {
       position: relative;
@@ -76,6 +93,8 @@
     .tree-node > .faq-item.top-category {
       position: relative;
       z-index: 0;
+      background: #546e7a;
+      color: #fff;
     }
     
     /* 자식들을 감싸는 컨테이너 - 기본은 닫힌 상태 */
@@ -129,21 +148,34 @@
     .faq-item:hover {
       background: #e0e0e0;
     }
-    .faq-item.top-category {
-      background: #546e7a;
+    
+    /* 전역 active 스타일 (중앙 Question 영역 등) */
+    .faq-item.active {
+      background: #555;
       color: #fff;
-      border-bottom: 2px solid #ddd;
     }
-    .faq-item.scenario {
-      background: #b3d7ff;
-      border-bottom: 2px solid #ddd;
-      font-weight: bold;
+    
+    /* 왼쪽 사이드바 active 상태 - 글꼴 색은 변경 없이 배경만 진하게 */
+    #sidebar .faq-item.top-category.active {
+      background: #3c4a55;
+      color: #fff;
+    }
+    #sidebar .faq-item.scenario.active {
+      background: #8ab3e0;
       color: #000;
     }
-    .faq-item.category {
-      background: #f1f5fa;
-      padding-left: 15px;
-      font-weight: bold;
+    #sidebar .faq-item.category.active {
+      background: #d1d6dc;
+      color: #000;
+    }
+    /* 반론 카테고리: 연한 빨간색 배경 */
+    .faq-item.category.argument {
+      background: #ffcccc;
+    }
+    /* 반론 카테고리 active 상태: 진한 빨간색 배경 */
+    #sidebar .faq-item.category.argument.active {
+      background: #ff9999;
+      color: #000;
     }
     
     /* breadcrumb 스타일 (question 제외) */
@@ -216,6 +248,86 @@
     .tooltip.show {
       display: block;
     }
+
+    /* 우측 하단 고정 우편 아이콘 */
+    #feedback-icon {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      background-color: #007bff;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+    #feedback-icon svg {
+      width: 24px;
+      height: 24px;
+      fill: #fff;
+    }
+
+    /* 모달 스타일 */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1100;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+      position: relative;
+      background-color: #fff;
+      margin: 5% auto;
+      padding: 0;
+      border: 1px solid #888;
+      width: 50%;
+      max-width: 800px;
+      height: 80%;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .modal-close {
+      color: #aaa;
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 1200;
+    }
+    .modal-close:hover,
+    .modal-close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    /* 모달 제목 스타일 */
+    .modal-title {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      padding: 20px 0 10px 0;
+      border-bottom: 1px solid #ddd;
+    }
+    /* iframe을 감싸는 네모 박스 - 테두리를 투명색으로 변경 */
+    .iframe-container {
+      width: 50%;
+      height: calc(70% - 50px);
+      margin: 20px auto;
+      border: 2px solid transparent;
+      border-radius: 5px;
+      overflow: hidden;
+    }
   </style>
 </head>
 <body>
@@ -229,13 +341,18 @@
     <div class="search-container">
       <input type="text" id="search" placeholder="검색어를 입력하세요..." onkeyup="filterFAQ()">
     </div>
+    <!-- 검색 바 아래 텍스트: 왼쪽 정렬, 볼드 처리 -->
+    <p class="sidebar-label"><strong>1️⃣ 파트너 질문 유형 선택</strong></p>
     
     <!-- Top Category 트리 출력 영역 -->
     <div id="topCategoryContainer"></div>
   </div>
   
   <!-- 가운데 Question 영역 -->
-  <div class="faq-section" id="questionSection"></div>
+  <div class="faq-section" id="questionSection">
+    <!-- 상단 텍스트 수정 -->
+    <p class="question-label">2️⃣ 파트너 질문 선택</p>
+  </div>
   
   <!-- 오른쪽 Response 영역 -->
   <div class="question-display" id="questionDisplay">
@@ -247,78 +364,79 @@
     요금 : 금액, 가격, 객단가, 객실가, 단가<br>
     리뷰 : 후기, 이용후기, 평가, 별점<br>
     취소 : 중단, 중지, 제외, 철회, 보류, 종료, 해지<br>
-    보상 : 리워드, 상품, 선물, 상금, 혜택
+    보상 : 리워드, 상품, 선물, 상금, 혜택<br>
+    비용 : 단가, 가격, 금액, 판매가, 구매가, 결제가<br>
+    단기광고 : 스팟광고, 한달광고<br>
+    정기광고 : 플러스상품
+  </div>
+  
+  <!-- 우측 하단 고정 우편 아이콘 -->
+  <div id="feedback-icon" onclick="openFeedbackModal()">
+    <svg viewBox="0 0 24 24">
+      <path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+    </svg>
+  </div>
+  
+  <!-- 모달 (FAQ 개선사항 접수하기) -->
+  <div id="feedback-modal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeFeedbackModal()">&times;</span>
+      <h2 class="modal-title">FAQ 개선사항 접수하기</h2>
+      <div class="iframe-container">
+        <!-- 모달이 열릴 때마다 새 iframe을 생성합니다. -->
+      </div>
+    </div>
   </div>
   
   <script>
     const faqData = [
-      {
-        topCategory: "리뷰 프로모션",
-        scenario: "도입",
-        category: "첫인사",
-        question: "[상담신청OB] 첫인사와 솔루션 소개",
-        response: "안녕하세요. 트립일레븐 마케팅 담당자 000입니다.<br>상담 신청하신 것을 확인하고 기쁜 마음으로 연락드리게 되었습니다.<br>해당 솔루션에 대해 짧게 안내드려도될까요?<br><br>솔루션은 대표적으로 4가지가 있는데요, 그중에서도 리뷰 프로모션은 가장 부담없이 시도해볼 수 있는 방법입니다.<br>요즘 고객들은 펜션을 선택할 때 최신 리뷰를 중요하게 보는데,<br>이 프로모션을 진행하면 고객이 보상을 받기 위해서 자연스럽게 리뷰를 작성할 수 있게 유도가 되고, 리뷰들이 쌓이면서 신뢰도를 높여서 예약 전환율 올릴 수 있습니다.<br>현재 약 300개 이상 펜션에서 진행 중이고, 실제로 예약률이 상승한 사례가 많습니다. 대표님도 한번 진행해보시는 건 어떨까요?"
-      },
-      {
-        topCategory: "리뷰 프로모션",
-        scenario: "도입",
-        category: "첫인사",
-        question: "[기본OB] 첫인사와 솔루션 소개",
-        response: "안녕하세요. 트립일레븐 마케팅 담당자 000입니다.<br>대표님 펜션의 매출을 높일 수 있는 간단한 솔루션이 있어서 연락드렸습니다.<br>짧게 안내드려도될까요?<br><br>솔루션은 대표적으로 4가지가 있는데요, 그중에서도 리뷰 프로모션은 가장 부담없이 시도해볼 수 있는 방법입니다.<br>요즘 고객들은 펜션을 선택할 때 최신 리뷰를 중요하게 보는데,<br>이 프로모션을 진행하면 고객이 보상을 받기 위해서 자연스럽게 리뷰를 작성할 수 있게 유도가 되고, 리뷰들이 쌓이면서 신뢰도를 높여서 예약 전환율 올릴 수 있습니다.<br>현재 약 300개 이상 펜션에서 진행 중이고, 실제로 예약률이 상승한 사례가 많습니다. 대표님도 한번 진행해보시는 건 어떨까요?"
-      },
-      {
-        topCategory: "리뷰 프로모션",
-        scenario: "도입",
-        category: "탐색질문",
-        question: "리뷰 프로모션이 뭔가요?",
-        response: "리뷰 프로모션은 이용을 마친 고객이 채널에 리뷰를 작성하고 인증하면 보상을 지급하는 마케팅 이벤트입니다.<br><br>예를 들어 배달 앱에서 리뷰 작성 시 사이드 메뉴를 제공하는 이벤트와 비슷한 방식이라고 생각하시면 됩니다.<br><br>리뷰 프로모션을 진행하면 트립에서 숙소를 이용한 고객에게 자동으로 이벤트 참여 링크를 발송해주고 참여한 고객의 리뷰를 검수 후 보상 지급하고, 비용은 정산에서 차감되므로 대표님께서는 별도 시간 부담 없이 손쉽게 진행할 수 있습니다."
-      },
-      {
-        "topCategory": "광고",
-        "scenario": "상담진행(공통)",
-        "category": "운영방식",
-        "question": "광고 효과를 극대화하려면 어떻게 해야 하나요?",
-        "response": "준비중입니다."
-      },
-      {
-        "topCategory": "광고",
-        "scenario": "마무리",
-        "category": "운영방식",
-        "question": "광고 언제부터 시작할 수 있어요?",
-        "response": "광고 송출 시점은 신청과 비용 결제가 완료된 시점에 따라 결정됩니다.<br>평균적으로 결제 완료 후 1~2주 내로 송출 가능합니다. 다만, 채널별로 일정이 다를 수 있습니다.<br><br>✅ 매월 초 발송되는 문자의 광고 구매 페이지에서 신청하면, 다음달 초부터 송출 시작합니다.<br>✅ 만약 신청 시기를 놓치셨다면 지금 접수해주시면 가능 여부와 시점 확인 후 안내드리겠습니다."
-      },
-      {
-        "topCategory": "광고",
-        "scenario": "마무리",
-        "category": "신청방법",
-        "question": "제가 직접 채널로 광고 신청해도되나요?",
-        "response": "준비중입니다."
-      },
-      {
-        "topCategory": "광고",
-        "scenario": "마무리",
-        "category": "신청방법",
-        "question": "광고 비용 결제 방법이 어떻게 되나요?",
-        "response": "준비중입니다."
-      },
-      {
-        "topCategory": "광고",
-        "scenario": "마무리",
-        "category": "운영방식",
-        "question": "광고 비용 세금계산서 발행되나요?<br>광고 비용은 세금 신고할 때 비용 처리 되나요?",
-        "response": "네, 세금계산서 발행됩니다.<br>광고 비용으로 결제 또는 정산 차감된 금액은 세금계산서 발행되며, 추후 세금 신고시 활용 가능합니다.<br><br>발행 내역은 관리자페이지의 [정산목록] 메뉴 확인 부탁드립니다."
-      },
-      {
-        "topCategory": "광고",
-        "scenario": "마무리",
-        "category": "신청방법",
-        "question": "광고 신청은 어떻게 하나요?",
-        "response": "준비중입니다."
-      }
+  {
+    topCategory: "리뷰 프로모션",
+    scenario: "도입",
+    category: "첫인사",
+    question: "[기본OB] 첫인사와 솔루션 소개",
+    response: "안녕하세요. 트립일레븐 마케팅 담당자 000입니다.<br>대표님 펜션의 매출을 높일 수 있는 간단한 솔루션이 있어서 연락드렸습니다.<br>짧게 안내드려도될까요?<br><br>솔루션은 대표적으로 4가지가 있는데요, 그중에서도 리뷰 프로모션은 가장 부담없이 시도해볼 수 있는 방법입니다.<br>요즘 고객들은 펜션을 선택할 때 최신 리뷰를 중요하게 보는데,<br>이 프로모션을 진행하면 고객이 보상을 받기 위해서 자연스럽게 리뷰를 작성할 수 있게 유도가 되고, 리뷰들이 쌓이면서 신뢰도를 높여서 예약 전환율 올릴 수 있습니다.<br>현재 약 300개 이상 펜션에서 진행 중이고, 실제로 예약률이 상승한 사례가 많습니다. 대표님도 한번 진행해보시는 건 어떨까요?"
+  },
+  {
+    topCategory: "리뷰 프로모션",
+    scenario: "도입",
+    category: "탐색질문",
+    question: "리뷰 프로모션이 뭔가요?",
+    response: "리뷰 프로모션은 이용을 마친 고객이 채널에 리뷰를 작성하고 인증하면 보상을 지급하는 마케팅 이벤트입니다.<br><br>예를 들어 배달 앱에서 리뷰 작성 시 사이드 메뉴를 제공하는 이벤트와 비슷한 방식이라고 생각하시면 됩니다.<br><br>리뷰 프로모션을 진행하면 트립에서 숙소를 이용한 고객에게 자동으로 이벤트 참여 링크를 발송해주고 참여한 고객의 리뷰를 검수 후 보상 지급하고, 비용은 정산에서 차감되므로 대표님께서는 별도 시간 부담 없이 손쉽게 진행할 수 있습니다."
+  },
+{
+  "topCategory": "리뷰 프로모션",
+  "scenario": "도입",
+  "category": "탐색질문",
+  "question": "왜 리뷰 프로모션을 하면 리뷰가 쌓이고 예약이 늘어나나요?",
+  "response": "리뷰가 쌓이면 예약이 늘어나는 이유는, 소비자들은 최신 리뷰가 없으면 결정을 망설이기 때문입니다.<br>온라인 쇼핑을 하면서 최신 리뷰가 없으면 결제를 주저하는 것처럼, 펜션 고객도 최신 리뷰가 부족하면 신뢰도가 낮아져 예약을 미루거나 다른 펜션을 선택할 가능성이 커집니다.<br>반대로, 최신 리뷰가 많을수록 고객의 신뢰도가 높아지고 예약을 결정할 확률이 높아집니다.<br><br>하지만, 고객이 자발적으로 리뷰를 남길 확률은 매우 낮습니다.<br>별도의 적극적인 요청 없이 자발적인 리뷰를 기대하기는 어렵기때문에 리뷰 프로모션을 통해 보상을 제공하여 리뷰 작성을 유도하면, 최신 리뷰를 빠르게 누적시킬 수 있고 결과적으로 예약 전환 상승 효과를 기대할 수 있습니다."
+},
+{
+  "topCategory": "광고",
+  "scenario": "상담진행(공통)",
+  "category": "반론",
+  "question": "광고 비용은 트립일레븐에서 부담해야하는거 아닌가요?",
+  "response": "<img src=\"https://raw.githubusercontent.com/dean296/trip11/6cb76f97f7ad5c76e443031f14e207f41f364d69/%EA%B4%91%EA%B3%A0%20%EC%B6%94%EC%B2%9C%20%ED%94%84%EB%A1%9C%EC%84%B8%EC%8A%A4.png\" alt=\"광고 추천 프로세스\" style=\"max-width: 100%;\">"
+}
     ];
     
-    // 컨테이너 내 vertical-line 높이를 자식들의 최하단까지 동적으로 조정합니다.
-    // 만약 컨테이너 내에 .scenario 요소가 있다면 마지막 scenario 요소의 중앙까지만 계산합니다.
+    // 왼쪽 사이드바 박스 클릭 시 활성화 처리 (글꼴 색은 변경 없이 배경색만 변경)
+    function selectSidebarItem(element) {
+      const container = element.parentElement;
+      container.querySelectorAll(".faq-item").forEach(box => box.classList.remove("active"));
+      element.classList.add("active");
+    }
+    
+    // 가운데 Question 영역 박스 클릭 시 활성화 처리 (기존 selectQuestion)
+    function selectQuestion(element, topCategory, scenario, category, questionText, responseText) {
+      const container = document.getElementById("questionSection");
+      const boxes = container.querySelectorAll(".faq-item");
+      boxes.forEach(box => box.classList.remove("active"));
+      element.classList.add("active");
+      displayQuestion(topCategory, scenario, category, questionText, responseText);
+    }
+    
+    // 컨테이너 내 vertical-line 높이를 동적으로 조정
     function adjustVerticalLine(container) {
       const verticalLine = container.querySelector('.vertical-line');
       if (!verticalLine) return;
@@ -365,6 +483,7 @@
         topCategoryDiv.classList.add("faq-item", "top-category");
         topCategoryDiv.textContent = topCat;
         topCategoryDiv.onclick = function() {
+          selectSidebarItem(this);
           const allContainers = document.querySelectorAll('[id^="tree-children-"]');
           allContainers.forEach(cont => {
             if (cont.id !== `tree-children-${topCat}` && cont.classList.contains("open")) {
@@ -423,6 +542,7 @@
         scenarioDiv.classList.add("faq-item", "scenario");
         scenarioDiv.textContent = scenario;
         scenarioDiv.onclick = function() {
+          selectSidebarItem(this);
           this.classList.toggle('expanded');
           toggleCategories(topCat, scenario);
         };
@@ -467,8 +587,15 @@
       categories.forEach(category => {
         const catDiv = document.createElement("div");
         catDiv.classList.add("faq-item", "category");
+        // 만약 category가 '반론'이면 연한 빨간색 스타일을 적용하기 위해 'argument' 클래스를 추가합니다.
+        if (category === "반론") {
+          catDiv.classList.add("argument");
+        }
         catDiv.textContent = category;
-        catDiv.onclick = () => renderQuestions(topCat, scenario, category);
+        catDiv.onclick = function() {
+          selectSidebarItem(this);
+          renderQuestions(topCat, scenario, category);
+        };
         parentContainer.appendChild(catDiv);
       });
       setTimeout(() => { adjustVerticalLine(parentContainer); }, 100);
@@ -477,11 +604,13 @@
     function renderQuestions(topCat, scenario, category) {
       const container = document.getElementById("questionSection");
       const questions = faqData.filter(item => item.topCategory === topCat && item.scenario === scenario && item.category === category);
-      container.innerHTML = questions.map(item => 
-        `<div class="faq-item" onclick="displayQuestion('${item.topCategory}', '${item.scenario}', '${item.category}', '${item.question}', '${item.response}')">
-           ${item.question}
-         </div>`
-      ).join('');
+      // 가운데 영역 상단 텍스트 수정
+      container.innerHTML = "<p class='question-label'>2️⃣ 파트너 질문 선택</p>" + 
+        questions.map(item => 
+          `<div class="faq-item" onclick="selectQuestion(this, '${item.topCategory}', '${item.scenario}', '${item.category}', '${item.question}', '${item.response}')">
+             ${item.question}
+           </div>`
+        ).join('');
     }
     
     function displayQuestion(topCategory, scenario, category, questionText, responseText) {
@@ -504,18 +633,48 @@
       const query = document.getElementById("search").value.trim().toLowerCase();
       const container = document.getElementById("questionSection");
       if (query === "") {
-        container.innerHTML = "";
+        container.innerHTML = "<p class='question-label'>2️⃣ 파트너 질문 선택</p>";
         return;
       }
       const results = faqData.filter(item => item.question.toLowerCase().includes(query));
       if (results.length === 0) {
-        container.innerHTML = `<div class="faq-item">검색 결과가 없습니다.</div>`;
+        container.innerHTML = "<p class='question-label'>2️⃣ 파트너 질문 선택</p><div class='faq-item'>검색 결과가 없습니다.</div>";
       } else {
-        container.innerHTML = results.map(item =>
-          `<div class="faq-item" onclick="displayQuestion('${item.topCategory}', '${item.scenario}', '${item.category}', '${item.question}', '${item.response}')">
-             ${item.question}
-           </div>`
-        ).join('');
+        container.innerHTML = "<p class='question-label'>2️⃣ 파트너 질문 선택</p>" + 
+          results.map(item =>
+            `<div class="faq-item" onclick="selectQuestion(this, '${item.topCategory}', '${item.scenario}', '${item.category}', '${item.question}', '${item.response}')">
+               ${item.question}
+             </div>`
+          ).join('');
+      }
+    }
+    
+    // 모달 열기 함수 - 모달이 열릴 때마다 iframe 컨테이너를 초기화하여 새 iframe을 생성합니다.
+    function openFeedbackModal() {
+      const modal = document.getElementById("feedback-modal");
+      modal.style.display = "block";
+      const iframeContainer = modal.querySelector(".iframe-container");
+      // iframe 컨테이너 초기화
+      iframeContainer.innerHTML = "";
+      // 새 iframe 생성 및 설정
+      const iframe = document.createElement("iframe");
+      iframe.src = "https://chilipepper.io/form/burning-red-serrano-e573773a-16f7-486f-89b8-45c084cfeee2";
+      iframe.style.width = "100%";
+      iframe.style.height = "100%";
+      iframe.setAttribute("frameborder", "0");
+      iframeContainer.appendChild(iframe);
+    }
+    
+    // 모달 닫기 함수
+    function closeFeedbackModal() {
+      document.getElementById("feedback-modal").style.display = "none";
+    }
+    
+    // 모달 바깥 클릭 시 닫힘 처리
+    window.onclick = function(event) {
+      const modal = document.getElementById("feedback-modal");
+      if (event.target == modal) {
+        closeFeedbackModal();
       }
     }
     
