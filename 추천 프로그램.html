@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAQ 검색</title>
+  <!-- 나눔고딕 폰트 적용 -->
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic&display=swap" rel="stylesheet">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2JE7G3R8W1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2JE7G3R8W1');
+  </script>
+  <style>
+    /* (기존 스타일 코드 동일) */
+    body {
+      font-family: 'Nanum Gothic', sans-serif;
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      height: 100vh;
+    }
+    #sidebar {
+      width: 25%;
+      padding: 20px;
+      border-right: 2px solid #ddd;
+      overflow-y: auto;
+      background: #ffffff;
+      user-select: none;
+      caret-color: transparent;
+    }
+    #sidebar input {
+      user-select: text;
+      caret-color: auto;
+    }
+    .dropdown-container {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .dropdown-container .dropdown-label {
+      font-size: 14px;
+      margin-right: 5px;
+    }
+    .dropdown-container select {
+      width: calc(50% - 40px);
+      padding: 5px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      display: block;
+    }
+    #questionSection {
+      width: 35%;
+      padding: 20px;
+      border-right: 2px solid #ddd;
+      overflow-y: auto;
+      background: #ffffff;
+    }
+    .question-display {
+      width: 50%;
+      background: #f1f5fa;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: flex-start;
+      height: 100vh;
+    }
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+        height: auto;
+      }
+      #sidebar, #questionSection, .question-display {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        margin-bottom: 20px;
+      }
+    }
+    #sidebar .faq-item {
+      padding: 5px;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+    .sidebar-label {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 10px;
+      text-align: left;
+      font-weight: bold;
+    }
+    .question-label {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    .tree-node {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    .tree-node > .faq-item.top-category {
+      position: relative;
+      z-index: 0;
+      background: #546e7a;
+      color: #fff;
+    }
+    .tree-children {
+      position: relative;
+      margin-left: 20px;
+      padding-left: 20px;
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.5s ease-out;
+    }
+    .tree-children.open {
+      max-height: 1000px;
+    }
+    .vertical-line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 2px;
+      background: #ccc;
+    }
+    .tree-children > .faq-item::before {
+      content: "";
+      position: absolute;
+      left: -20px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 2px;
+      background: #ccc;
+    }
+    .faq-item {
+      position: relative;
+      z-index: 0;
+      background: #f1f5fa;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      cursor: pointer;
+      padding: 10px;
+      text-align: left;
+      font-weight: bold;
+    }
+    .faq-item:hover {
+      background: #e0e0e0;
+    }
+    .faq-item.active {
+      background: #e3f2fd;
+      color: #000000;
+    }
+    #sidebar .faq-item.top-category.active {
+      background: #3c4a55;
+      color: #fff;
+    }
+    #sidebar .faq-item.scenario.active {
+      background: #8ab3e0;
+      color: #000;
+    }
+    #sidebar .faq-item.category.active {
+      background: #d1d6dc;
+      color: #000;
+    }
+    .faq-item.category.argument {
+      background: #ffcccc;
+    }
+    #sidebar .faq-item.category.argument.active {
+      background: #ff9999;
+      color: #000;
+    }
+    .faq-item.subcategory {
+      background: #f1f5fa;
+    }
+    /* ----- 추가: faq-item subcategory.active 스타일 (faq-item category active expanded와 동일) ----- */
+    #sidebar .faq-item.subcategory.active {
+      background: #d1d6dc;
+      color: #000;
+    }
+    .breadcrumb {
+      font-size: 16px;
+      color: #555;
+      margin-bottom: 10px;
+    }
+    .selected-question {
+      font-size: 22px;
+      font-weight: bold;
+      color: #007bff;
+      margin-bottom: 10px;
+    }
+    .selected-response {
+      padding: 15px;
+      background: #e3f2fd;
+      border-radius: 5px;
+      font-size: 15px;
+    }
+    .question-breadcrumb {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 3px;
+    }
+    .search-container {
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+    .search-container input {
+      width: calc(100% - 40px);
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      display: block;
+      margin: 0 auto;
+    }
+    .faq-header {
+      display: flex;
+      align-items: center;
+    }
+    .info-button {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: #007bff;
+      color: white;
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      line-height: 24px;
+      cursor: pointer;
+      border: none;
+      margin-left: 5px;
+    }
+    .tooltip {
+      display: none;
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-size: 14px;
+      white-space: nowrap;
+      z-index: 1000;
+    }
+    .tooltip.show {
+      display: block;
+    }
+    #feedback-icon {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      background-color: #007bff;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+    #feedback-icon svg {
+      width: 24px;
+      height: 24px;
+      fill: #fff;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1100;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+      position: relative;
+      background-color: #fff;
+      margin: 5% auto;
+      padding: 0;
+      border: 1px solid #888;
+      width: 50%;
+      max-width: 800px;
+      height: 80%;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .modal-close {
+      color: #aaa;
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 1200;
+    }
+    .modal-close:hover,
+    .modal-close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .modal-title {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      padding: 20px 0 10px 0;
+      border-bottom: 1px solid #ddd;
+    }
+    .iframe-container {
+      width: 50%;
+      height: calc(70% - 50px);
+      margin: 20px auto;
+      border: 2px solid transparent;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .image-comment-above, .image-comment-below {
+      margin: 10px 0;
+    }
+    .image-comment-above img, .image-comment-below img {
+      max-width: 100%;
+      height: auto;
+      cursor: pointer;
+    }
+    .comment-above, .comment-below {
+      margin-top: 5px;
+      font-size: 14px;
+    }
+    .faq-item,
+    .faq-item.top-category.active.expanded,
+    .faq-item.scenario.active.expanded,
+    .faq-item.category.active,
+    .faq-item.active,
+    .breadcrumb,
+    .selected-question,
+    .comment-above,
+    .selected-response,
+    .comment-below,
+    .faq-header,
+    .sidebar-label,
+    .question-label,
+    .question-display {
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      caret-color: transparent;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- 왼쪽 사이드바 -->
+  <div class="faq-section" id="sidebar">
+    <div class="faq-header">
+      <h1>FAQ 검색</h1>
+      <button class="info-button" onclick="toggleTooltip()">!</button>
+    </div>
+    
+    <div class="dropdown-container">
+      <label for="topCategorySelect" class="dropdown-label">✅검색조건-유형선택</label>
+      <select id="topCategorySelect" onchange="filterFAQ()">
+        <option value="">전체</option>
+      </select>
+    </div>
+    
+    <div class="search-container">
+      <input type="text" id="search" placeholder="검색어를 입력하세요..." onkeyup="filterFAQ()">
+    </div>
+    <p class="sidebar-label"><strong>1️⃣ 파트너 질문 유형 선택</strong></p>
+    <div id="topCategoryContainer"></div>
+  </div>
+  
+  <!-- 가운데 Question 영역 -->
+  <div class="faq-section" id="questionSection">
+    <p class="question-label">2️⃣ 파트너 질문 선택</p>
+  </div>
+  
+  <!-- 오른쪽 Response 영역 -->
+  <div class="question-display" id="questionDisplay">
+    <p>질문을 클릭하면 여기에 표시됩니다.</p>
+  </div>
+  
+  <div class="tooltip" id="tooltip">
+    FAQ 용어 정리 (검색이 용이하기 위해 일관된 단어로 검색해주세요.)<br>
+    - 요금 : 금액, 가격, 객단가, 객실가, 단가<br>
+    - 리뷰 : 후기, 이용후기, 평가, 별점<br>
+    - 취소 : 중단, 중지, 제외, 철회, 보류, 종료, 해지<br>
+    - 보상 : 리워드, 상품, 선물, 상금, 혜택<br>
+    - 비용 : 단가, 가격, 금액, 판매가, 구매가, 결제가<br>
+    - 단기광고 : 스팟광고, 한달광고<br>
+    - 정기광고 : 플러스상품
+  </div>
+  
+  <div id="feedback-icon" onclick="openFeedbackModal()">
+    <svg viewBox="0 0 24 24">
+      <path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+    </svg>
+  </div>
+  
+  <div id="feedback-modal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeFeedbackModal()">&times;</span>
+      <h2 class="modal-title">FAQ 개선사항 접수하기</h2>
+      <div class="iframe-container">
+        <!-- 모달이 열릴 때마다 새 iframe을 생성 -->
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // faqData 예시 (subCategory가 없는 항목과 있는 항목을 혼합)
+    const faqData = [  
+
+ {
+    topCategory: "추천 프로그램",
+    scenario: "도입",
+    category: "첫인사",
+    question: "[상담신청OB] 첫인사와 솔루션 소개",
+    response: "준비중입니다."
+  },
+ {
+    topCategory: "총판 영업",
+    scenario: "도입",
+    category: "첫인사",
+    question: "[상담신청OB] 첫인사와 솔루션 소개",
+    response: "준비중입니다."
+  }
+    ];
+    
+    function renderTopCategoryDropdown() {
+      const selectEl = document.getElementById("topCategorySelect");
+      const topCategories = [...new Set(faqData.map(item => item.topCategory))];
+      topCategories.forEach(topCat => {
+        const option = document.createElement("option");
+        option.value = topCat;
+        option.textContent = topCat;
+        selectEl.appendChild(option);
+      });
+    }
+    
+    function selectSidebarItem(element) {
+      const container = element.parentElement;
+      container.querySelectorAll(".faq-item").forEach(box => box.classList.remove("active"));
+      element.classList.add("active");
+    }
+    
+    // subCategory가 없을 경우, subCategory 파라미터 없이 호출
+    function selectQuestion(element, topCategory, scenario, category, subCategory, questionText, responseText, imageAbove, commentAbove, imageBelow, commentBelow) {
+      imageAbove = imageAbove || "";
+      commentAbove = commentAbove || "";
+      imageBelow = imageBelow || "";
+      commentBelow = commentBelow || "";
+      
+      const container = document.getElementById("questionSection");
+      const boxes = container.querySelectorAll(".faq-item");
+      boxes.forEach(box => box.classList.remove("active"));
+      element.classList.add("active");
+      
+      gtag('event', 'faq_question_view', {
+          'event_category': 'FAQ',
+          'event_label': questionText,
+          'top_category': topCategory,
+          'scenario': scenario,
+          'category': category,
+          'sub_category': subCategory || ""
+      });
+      
+      displayQuestion(topCategory, scenario, category, subCategory, questionText, responseText, imageAbove, commentAbove, imageBelow, commentBelow);
+    }
+    
+    // subCategory가 있을 때만 breadcrumb에 추가
+    function displayQuestion(topCategory, scenario, category, subCategory, questionText, responseText, imageAbove, commentAbove, imageBelow, commentBelow) {
+      let breadcrumb = topCategory + " > " + scenario + " > " + category;
+      if(subCategory) {
+        breadcrumb += " > " + subCategory;
+      }
+      let html = `<p class="breadcrumb">${breadcrumb}</p>
+         <p class="selected-question"><strong>${questionText}</strong></p>`;
+      if(imageAbove && imageAbove.trim() !== "") {
+        html += `<div class="image-comment-above">
+                   <a href="${imageAbove}" target="_blank">
+                     <img src="${imageAbove}" alt="FAQ Image Above">
+                   </a>
+                   <div class="comment-above">${commentAbove || ""}</div>
+                 </div>`;
+      }
+      html += `<p class="selected-response">${responseText}</p>`;
+      if(imageBelow && imageBelow.trim() !== "") {
+        html += `<div class="image-comment-below">
+                   <a href="${imageBelow}" target="_blank">
+                     <img src="${imageBelow}" alt="FAQ Image Below">
+                   </a>
+                   <div class="comment-below">${commentBelow || ""}</div>
+                 </div>`;
+      }
+      document.getElementById("questionDisplay").innerHTML = html;
+    }
+    
+    function renderTopCategories() {
+      const topContainer = document.getElementById("topCategoryContainer");
+      topContainer.innerHTML = '';
+      const topCategories = [...new Set(faqData.map(item => item.topCategory))];
+      topCategories.forEach(topCat => {
+        const treeNode = document.createElement("div");
+        treeNode.classList.add("tree-node");
+        
+        const topCategoryDiv = document.createElement("div");
+        topCategoryDiv.classList.add("faq-item", "top-category");
+        topCategoryDiv.textContent = topCat;
+        topCategoryDiv.onclick = function() {
+          selectSidebarItem(this);
+          const allContainers = document.querySelectorAll('[id^="tree-children-"]');
+          allContainers.forEach(cont => {
+            if (cont.id !== `tree-children-${topCat}` && cont.classList.contains("open")) {
+              cont.classList.remove("open");
+              setTimeout(() => { 
+                cont.innerHTML = ''; 
+                const vl = document.createElement("div");
+                vl.classList.add("vertical-line");
+                cont.appendChild(vl);
+              }, 500);
+            }
+          });
+          this.classList.toggle('expanded');
+          toggleTopCategory(topCat);
+        };
+        treeNode.appendChild(topCategoryDiv);
+        
+        const childrenContainer = document.createElement("div");
+        childrenContainer.classList.add("tree-children");
+        childrenContainer.id = `tree-children-${topCat}`;
+        const verticalLine = document.createElement("div");
+        verticalLine.classList.add("vertical-line");
+        childrenContainer.appendChild(verticalLine);
+        
+        treeNode.appendChild(childrenContainer);
+        topContainer.appendChild(treeNode);
+      });
+    }
+    
+    function toggleTopCategory(topCat) {
+      const container = document.getElementById(`tree-children-${topCat}`);
+      if (container.classList.contains("open")) {
+        container.classList.remove("open");
+        setTimeout(() => { 
+          container.innerHTML = ''; 
+          const vl = document.createElement("div");
+          vl.classList.add("vertical-line");
+          container.appendChild(vl);
+        }, 500);
+      } else {
+        renderScenarios(topCat, container);
+        container.classList.add("open");
+        setTimeout(() => { adjustVerticalLine(container); }, 100);
+      }
+    }
+    
+    function renderScenarios(topCat, parentContainer) {
+      parentContainer.innerHTML = '';
+      const verticalLine = document.createElement("div");
+      verticalLine.classList.add("vertical-line");
+      parentContainer.appendChild(verticalLine);
+      
+      const scenarios = [...new Set(faqData.filter(item => item.topCategory === topCat).map(item => item.scenario))];
+      scenarios.forEach(scenario => {
+        const scenarioDiv = document.createElement("div");
+        scenarioDiv.classList.add("faq-item", "scenario");
+        scenarioDiv.textContent = scenario;
+        scenarioDiv.onclick = function() {
+          selectSidebarItem(this);
+          this.classList.toggle('expanded');
+          toggleCategories(topCat, scenario);
+        };
+        parentContainer.appendChild(scenarioDiv);
+        
+        const categoryContainer = document.createElement("div");
+        categoryContainer.classList.add("tree-children");
+        categoryContainer.id = `tree-category-${topCat}-${scenario}`;
+        const catVerticalLine = document.createElement("div");
+        catVerticalLine.classList.add("vertical-line");
+        categoryContainer.appendChild(catVerticalLine);
+        
+        parentContainer.appendChild(categoryContainer);
+      });
+      setTimeout(() => { adjustVerticalLine(parentContainer); }, 100);
+    }
+    
+    // Category 클릭 시, subCategory 존재 여부에 따라 처리
+    function toggleCategories(topCat, scenario) {
+      const container = document.getElementById(`tree-category-${topCat}-${scenario}`);
+      if (container.classList.contains("open")) {
+        container.classList.remove("open");
+        setTimeout(() => { 
+          container.innerHTML = ''; 
+          const vl = document.createElement("div");
+          vl.classList.add("vertical-line");
+          container.appendChild(vl);
+        }, 500);
+      } else {
+        renderCategories(topCat, scenario, container);
+        container.classList.add("open");
+        setTimeout(() => { adjustVerticalLine(container); }, 100);
+      }
+    }
+    
+    function renderCategories(topCat, scenario, parentContainer) {
+      parentContainer.innerHTML = '';
+      const verticalLine = document.createElement("div");
+      verticalLine.classList.add("vertical-line");
+      parentContainer.appendChild(verticalLine);
+      
+      const categories = [...new Set(faqData.filter(item => item.topCategory === topCat && item.scenario === scenario).map(item => item.category))];
+      categories.forEach(category => {
+        const catDiv = document.createElement("div");
+        catDiv.classList.add("faq-item", "category");
+        if (category === "반론") {
+          catDiv.classList.add("argument");
+        }
+        catDiv.textContent = category;
+        catDiv.onclick = function() {
+          // 기존에 active된 category와 subcategory 모두 제거
+          document.querySelectorAll('.faq-item.category.active, .faq-item.subcategory.active').forEach(item => item.classList.remove('active'));
+          this.classList.add('active');
+          var hasSubCategory = faqData.some(item => item.topCategory === topCat && item.scenario === scenario && item.category === category && item.hasOwnProperty('subCategory') && item.subCategory !== "");
+          if(hasSubCategory) {
+            this.classList.toggle('expanded');
+            toggleSubCategories(topCat, scenario, category);
+          } else {
+            renderQuestions(topCat, scenario, category);
+          }
+        };
+        parentContainer.appendChild(catDiv);
+        
+        // subCategory 컨테이너 (subCategory가 있을 경우에만 사용)
+        const subCategoryContainer = document.createElement("div");
+        subCategoryContainer.classList.add("tree-children");
+        subCategoryContainer.id = `tree-subcategory-${topCat}-${scenario}-${category}`;
+        const subCatVerticalLine = document.createElement("div");
+        subCatVerticalLine.classList.add("vertical-line");
+        subCategoryContainer.appendChild(subCatVerticalLine);
+        parentContainer.appendChild(subCategoryContainer);
+      });
+      setTimeout(() => { adjustVerticalLine(parentContainer); }, 100);
+    }
+    
+    // subCategory 토글 함수: subCategory가 없으면 바로 질문 렌더링
+    function toggleSubCategories(topCat, scenario, category) {
+      const container = document.getElementById(`tree-subcategory-${topCat}-${scenario}-${category}`);
+      // faqData에서 해당 항목 중 subCategory가 정의된 항목이 있는지 확인
+      const items = faqData.filter(item => item.topCategory === topCat && item.scenario === scenario && item.category === category);
+      const hasSub = items.some(item => item.hasOwnProperty('subCategory') && item.subCategory !== "");
+      if(!hasSub) {
+        renderQuestions(topCat, scenario, category);
+        return;
+      }
+      
+      if (container.classList.contains("open")) {
+        container.classList.remove("open");
+        setTimeout(() => { 
+          container.innerHTML = ''; 
+          const vl = document.createElement("div");
+          vl.classList.add("vertical-line");
+          container.appendChild(vl);
+        }, 500);
+      } else {
+        renderSubCategories(topCat, scenario, category, container);
+        container.classList.add("open");
+        setTimeout(() => { adjustVerticalLine(container); }, 100);
+      }
+    }
+    
+    function renderSubCategories(topCat, scenario, category, parentContainer) {
+      parentContainer.innerHTML = '';
+      const verticalLine = document.createElement("div");
+      verticalLine.classList.add("vertical-line");
+      parentContainer.appendChild(verticalLine);
+      
+      const subCategories = [...new Set(faqData.filter(item => item.topCategory === topCat && item.scenario === scenario && item.category === category && item.hasOwnProperty('subCategory') && item.subCategory !== "").map(item => item.subCategory))];
+      
+      subCategories.forEach(subCategory => {
+        const subCatDiv = document.createElement("div");
+        subCatDiv.classList.add("faq-item", "subcategory");
+        subCatDiv.textContent = subCategory;
+        subCatDiv.onclick = function() {
+          // 기존에 active된 category와 subcategory 모두 제거
+          document.querySelectorAll('.faq-item.category.active, .faq-item.subcategory.active').forEach(item => item.classList.remove('active'));
+          this.classList.add('active');
+          renderQuestions(topCat, scenario, category, subCategory);
+        };
+        parentContainer.appendChild(subCatDiv);
+      });
+      setTimeout(() => { adjustVerticalLine(parentContainer); }, 100);
+    }
+    
+    // renderQuestions: subCategory 파라미터가 없으면 Category 기준으로 필터링
+    function renderQuestions(topCat, scenario, category, subCategory) {
+      const container = document.getElementById("questionSection");
+      let questions, breadcrumb;
+      if (typeof subCategory === 'undefined' || subCategory === null || subCategory === "") {
+         questions = faqData.filter(item => item.topCategory === topCat && item.scenario === scenario && item.category === category && !item.hasOwnProperty('subCategory'));
+         breadcrumb = topCat + " > " + scenario + " > " + category;
+      } else {
+         questions = faqData.filter(item => item.topCategory === topCat && item.scenario === scenario && item.category === category && item.subCategory === subCategory);
+         breadcrumb = topCat + " > " + scenario + " > " + category + " > " + subCategory;
+      }
+      container.innerHTML = "<p class='question-label'>2️⃣ 파트너 질문 선택</p>" + 
+        questions.map(item => 
+          `<div class="faq-item" onclick="selectQuestion(this, '${item.topCategory}', '${item.scenario}', '${item.category}', '${item.subCategory || ""}', '${item.question}', '${item.response}', '${item.imageAbove || ""}', '${item.commentAbove || ""}', '${item.imageBelow || ""}', '${item.commentBelow || ""}')">
+             <div class="question-breadcrumb">${breadcrumb}</div>
+             ${item.question}
+           </div>`
+        ).join('');
+    }
+    
+    // ===== 수정된 adjustVerticalLine 함수 =====
+    function adjustVerticalLine(container) {
+      const verticalLine = container.querySelector('.vertical-line');
+      if (!verticalLine) return;
+      
+      // 만약 container 내에 expanded된 category가 있다면 해당 요소 기준으로 높이 계산
+      const expandedCategoryChildren = Array.from(container.children)
+        .filter(child => child.classList.contains('category') && child.classList.contains('expanded'));
+      if(expandedCategoryChildren.length > 0) {
+        const lastCategory = expandedCategoryChildren[expandedCategoryChildren.length - 1];
+        const targetHeight = lastCategory.offsetTop + (lastCategory.offsetHeight / 2);
+        verticalLine.style.height = targetHeight + "px";
+      } else {
+        const scenarioChildren = Array.from(container.children).filter(child => child.classList.contains('scenario'));
+        if (scenarioChildren.length > 0) {
+          const lastScenario = scenarioChildren[scenarioChildren.length - 1];
+          const targetHeight = lastScenario.offsetTop + (lastScenario.offsetHeight / 2);
+          verticalLine.style.height = targetHeight + "px";
+        } else {
+          const children = Array.from(container.children).filter(child => !child.classList.contains('vertical-line'));
+          let lastChild = null;
+          for (let i = children.length - 1; i >= 0; i--) {
+            if (children[i].offsetHeight > 0) {
+              lastChild = children[i];
+              break;
+            }
+          }
+          if (!lastChild && children.length > 0) {
+            lastChild = children[children.length - 1];
+          }
+          if (lastChild) {
+            verticalLine.style.height = (lastChild.offsetTop + (lastChild.offsetHeight / 2)) + "px";
+          } else {
+            verticalLine.style.height = "0px";
+          }
+        }
+      }
+      
+      const parentTreeContainer = container.parentElement.closest('.tree-children');
+      if (parentTreeContainer) {
+        adjustVerticalLine(parentTreeContainer);
+      }
+    }
+    // ===== 여기까지 =====
+    
+    function filterFAQ() {
+      const query = document.getElementById("search").value.trim().toLowerCase();
+      const selectedTop = document.getElementById("topCategorySelect").value;
+      let filtered = faqData;
+      
+      if(selectedTop !== "") {
+        filtered = filtered.filter(item => item.topCategory === selectedTop);
+      }
+      
+      if(query !== "") {
+        filtered = filtered.filter(item => item.question.toLowerCase().includes(query));
+      }
+      
+      const container = document.getElementById("questionSection");
+      if(query === "" && selectedTop === "") {
+        container.innerHTML = "<p class='question-label'>2️⃣ 파트너 질문 선택</p>";
+        return;
+      }
+      
+      if(filtered.length === 0) {
+        container.innerHTML = "<p class='question-label'>2️⃣ 파트너 질문 선택</p><div class='faq-item'>검색 결과가 없습니다.</div>";
+      } else {
+        container.innerHTML = "<p class='question-label'>2️⃣ 파트너 질문 선택</p>" + 
+          filtered.map(item =>
+            `<div class="faq-item" onclick="selectQuestion(this, '${item.topCategory}', '${item.scenario}', '${item.category}', '${item.subCategory || ""}', '${item.question}', '${item.response}', '${item.imageAbove || ""}', '${item.commentAbove || ""}', '${item.imageBelow || ""}', '${item.commentBelow || ""}')">
+               <div class="question-breadcrumb">${item.topCategory} > ${item.scenario} > ${item.category}${item.subCategory ? " > " + item.subCategory : ""}</div>
+               ${item.question}
+             </div>`
+          ).join('');
+      }
+    }
+    
+    function toggleTooltip() {
+      const tooltip = document.getElementById("tooltip");
+      tooltip.classList.toggle("show");
+      setTimeout(() => {
+        tooltip.classList.remove("show");
+      }, 3000);
+    }
+    
+    function openFeedbackModal() {
+      const modal = document.getElementById("feedback-modal");
+      modal.style.display = "block";
+      const iframeContainer = modal.querySelector(".iframe-container");
+      iframeContainer.innerHTML = "";
+      const iframe = document.createElement("iframe");
+      iframe.src = "https://chilipepper.io/form/burning-red-serrano-e573773a-16f7-486f-89b8-45c084cfeee2";
+      iframe.style.width = "100%";
+      iframe.style.height = "100%";
+      iframe.setAttribute("frameborder", "0");
+      iframeContainer.appendChild(iframe);
+    }
+    
+    function closeFeedbackModal() {
+      document.getElementById("feedback-modal").style.display = "none";
+    }
+    
+    window.onclick = function(event) {
+      const modal = document.getElementById("feedback-modal");
+      if (event.target == modal) {
+        closeFeedbackModal();
+      }
+    }
+    
+    renderTopCategories();
+    renderTopCategoryDropdown();
+  </script>
+</body>
+</html>
