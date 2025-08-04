@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FAQ 검색</title>
+  <title>세일즈 FAQ</title>
   <!-- 나눔고딕 폰트 적용 -->
   <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic&display=swap" rel="stylesheet">
   <!-- Google tag (gtag.js) -->
@@ -343,7 +343,7 @@
   <!-- 왼쪽 사이드바 -->
   <div class="faq-section" id="sidebar">
     <div class="faq-header">
-      <h1>FAQ 검색</h1>
+      <h1>세일즈 FAQ 검색</h1>
       <button class="info-button" onclick="toggleTooltip()">!</button>
     </div>
     
@@ -357,7 +357,7 @@
     <div class="search-container">
       <input type="text" id="search" placeholder="검색어를 입력하세요..." onkeyup="filterFAQ()">
     </div>
-    <p class="sidebar-label"><strong>❶ 파트너 질문 유형 선택<br> 🟨컨설팅FAQ │ 🟦문의FAQ</strong></p>
+    <p class="sidebar-label"><strong>❶ 파트너 질문 유형 선택<br>🟥영업FAQ│🟨컨설팅FAQ│🟦문의FAQ</strong></p>
     <div id="topCategoryContainer"></div>
   </div>
   
@@ -401,6 +401,7 @@
   <script>
     // ----- 추가: topCategory별 기본 색상 정의 ----- 
     const topCategoryDefaultColors = {
+      "총판 영업": "rgb(88 147 244 / 76%)",
       "리뷰 프로모션": "#FABF28",
       "채널 프로모션": "#FABF28",
       "광고": "#FABF28",
@@ -408,7 +409,6 @@
       "컨설팅": "#FABF28",
       "채널문의": "rgb(88 147 244 / 76%)",
       "채널전략(채널박스)": "rgb(88 147 244 / 76%)",
-      "클레임": "rgb(88 147 244 / 76%)",
       "기본응대": "rgb(88 147 244 / 76%)",
       // 여기에 다른 topCategory와 기본 색상을 추가하세요
     };
@@ -507,7 +507,207 @@
   subCategory: "정보확인",
   question: "시설이 좀 오래됐는데, 그런 펜션도 총판 가능한가요?",
   response: "(준비중입니다.)",
-},   
+},
+      {
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "계약조건",
+  question: "계약 기간은 어떻게 되나요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "계약조건",
+  question: "총판 수수료는 얼마인가요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "계약조건",
+  question: "(경쟁사보다) 수수료가 높은 이유는 뭔가요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "계약조건",
+  question: "수수료 외에 추가로 드는 비용은 없나요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "계약조건",
+  question: "수수료만큼 효과가 확실히 있나요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "계약조건",
+  question: "계약 중 해지하면 어떻게 되나요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "계약조건",
+  question: "중간에 해지하면 위약금은 얼마인가요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "마케팅",
+  question: "예약률이나 매출이 보장되나요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "계약조건",
+  question: "매출 두 배 오른다는 걸 계약서에 명시해줄 수 있나요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "계약조건",
+  question: "매출이 높은 편인데, 저한테만 제공되는 혜택이 있나요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "마케팅",
+  question: "마케팅은 구체적으로 어떤 방식으로 진행되나요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "마케팅",
+  question: "공실은 어떤 방식으로 관리해주나요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "마케팅",
+  question: "요즘 다른 펜션들은 마케팅을 어떻게 하나요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "마케팅",
+  question: "연동 가능한 예약 채널은 어디 어디인가요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "광고",
+  question: "광고비는 별도로 드나요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "광고",
+  question: "광고는 어떤 방식으로 나가나요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "광고",
+  question: "트립일레븐에서 광고도 지원해주시나요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "광고",
+  question: "블로그나 인스타 같은 SNS도 같이 해주시나요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "운영",
+  question: "정산은 어떤 방식으로 진행되나요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "운영",
+  question: "정산 방식이 다른 업체랑 왜 다른가요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "운영",
+  question: "기존 대행사랑 병행해서 운영할 수 있나요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "운영",
+  question: "특정 채널만 따로 제가 직접 팔 수는 없나요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "운영",
+  question: "기존 채널에 있는 리뷰도 이관 가능한가요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "운영",
+  question: "현장에서 추가 인원이나 바베큐, 미온수 비용도 받을 수 있나요?",
+  response: "(준비중입니다.)",
+},
+{
+  topCategory: "총판 영업",
+  scenario: "총판A",
+  category: "상담진행",
+  subCategory: "운영",
+  question: "세금계산서 발행되나요?",
+  response: "(준비중입니다.)",
+},
 {
     topCategory: "리뷰 프로모션",
     scenario: "도입",
@@ -2851,3 +3051,4 @@ additionalResponse: "⚠️ [1차] 파트너가 수긍하지 않는 경우, 추�
   </script>
 </body>
 </html>
+
